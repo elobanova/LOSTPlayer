@@ -1,0 +1,266 @@
+package lab.android.evgalexandrakaterwth.lostplayer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import android.os.Bundle;
+import android.os.IBinder;
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.MediaController;
+
+import lab.android.evgalexandrakaterwth.lostplayer.adapter.SongListAdapter;
+import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.GetListOfSongsTask;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.OnResponseListener;
+import lab.android.evgalexandrakaterwth.lostplayer.service.MusicController;
+import lab.android.evgalexandrakaterwth.lostplayer.service.MusicService;
+
+/**
+ * Created by ekaterina on 26.07.2015.
+ */
+public class LOSTPlayerActivity extends Activity implements MediaController.MediaPlayerControl {
+    private static final String TAG = "LOST Player Activity";
+    private List<SongItem> listOfSongs;
+    private ListView trackListView;
+
+    private MusicService service;
+    private Intent playIntent;
+    private boolean isBound = false;
+
+    private MusicController controller;
+    private boolean isPaused = false;
+    private boolean isPlaybackPaused = false;
+
+    private ServiceConnection musicConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+            LOSTPlayerActivity.this.service = binder.getService();
+            LOSTPlayerActivity.this.service.setList(listOfSongs);
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_player_lost);
+
+        this.trackListView = (ListView) findViewById(R.id.song_list);
+        this.listOfSongs = new ArrayList<>();
+        getSongList();
+        Collections.sort(listOfSongs, new Comparator<SongItem>() {
+            public int compare(SongItem song, SongItem other) {
+                return song.getTitle().compareTo(other.getTitle());
+            }
+        });
+        setController();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (this.playIntent == null) {
+            this.playIntent = new Intent(this, MusicService.class);
+            bindService(this.playIntent, this.musicConnection, Context.BIND_AUTO_CREATE);
+            startService(this.playIntent);
+        }
+    }
+
+    public void onSongSelectedFromList(View view) {
+        this.service.setSong(Integer.parseInt(view.getTag().toString()));
+        this.service.playSong();
+        if (this.isPlaybackPaused) {
+            setController();
+            this.isPlaybackPaused = false;
+        }
+        this.controller.show(0);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_end:
+                stopService(this.playIntent);
+                this.service = null;
+                System.exit(0);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void getSongList() {
+        GetListOfSongsTask getListOfSongsTask = new GetListOfSongsTask(ApiPathEnum.ALL_SONGS);
+        getListOfSongsTask.setOnResponseListener(new OnResponseListener<List<SongItem>>() {
+
+            @Override
+            public void onResponse(List<SongItem> songsList) {
+                LOSTPlayerActivity.this.listOfSongs = songsList;
+                SongListAdapter adapter = new SongListAdapter(LOSTPlayerActivity.this, LOSTPlayerActivity.this.listOfSongs);
+                trackListView.setAdapter(adapter);
+                LOSTPlayerActivity.this.service.setList(LOSTPlayerActivity.this.listOfSongs);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        });
+        getListOfSongsTask.send();
+    }
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return true;
+    }
+
+    @Override
+    public int getAudioSessionId() {
+        return 0;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        if (this.service != null && this.isBound && this.service.isPlaying()) {
+            return this.service.getPosition();
+        }
+        else return 0;
+    }
+
+    @Override
+    public int getDuration() {
+        if (this.service != null && this.isBound && this.service.isPlaying()) {
+            return this.service.getDuration();
+        }
+        else return 0;
+    }
+
+    @Override
+    public boolean isPlaying() {
+        if (this.service != null && this.isBound)
+            return this.service.isPlaying();
+        return false;
+    }
+
+    @Override
+    public void pause() {
+        this.isPlaybackPaused = true;
+        this.service.pausePlayer();
+    }
+
+    @Override
+    public void seekTo(int position) {
+        this.service.seek(position);
+    }
+
+    @Override
+    public void start() {
+        this.service.startService();
+    }
+
+    private void setController() {
+        this.controller = new MusicController(this);
+        this.controller.setPrevNextListeners(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playNext();
+            }
+        }, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playPreviousTrack();
+            }
+        });
+        this.controller.setMediaPlayer(this);
+        this.controller.setAnchorView(findViewById(R.id.song_list));
+        this.controller.setEnabled(true);
+    }
+
+    private void playNext() {
+        this.service.playNextTrack();
+        if (this.isPlaybackPaused) {
+            setController();
+            this.isPlaybackPaused = false;
+        }
+        this.controller.show(0);
+    }
+
+    private void playPreviousTrack() {
+        this.service.playPreviousTrack();
+        if (this.isPlaybackPaused) {
+            setController();
+            this.isPlaybackPaused = false;
+        }
+        this.controller.show(0);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        this.isPaused = true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (this.isPaused) {
+            setController();
+            this.isPaused = false;
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        this.controller.hide();
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopService(playIntent);
+        this.service = null;
+        super.onDestroy();
+    }
+
+}
