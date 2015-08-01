@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.app.Activity;
@@ -16,8 +17,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.MediaController;
 
@@ -34,6 +33,10 @@ import lab.android.evgalexandrakaterwth.lostplayer.service.MusicService;
  */
 public class LOSTPlayerActivity extends Activity implements MediaController.MediaPlayerControl {
     private static final String TAG = "LOST Player Activity";
+    public static final String IS_CHECKED_KEY = "isCheckedKey";
+    public static final String MY_PREFERENCES = "MyPrefs";
+    private static SharedPreferences sharedpreferences;
+
     private List<SongItem> listOfSongs;
     private ListView trackListView;
 
@@ -45,6 +48,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     private boolean isPaused = false;
     private boolean isPlaybackPaused = false;
 
+    private boolean isChecked = false;
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -64,6 +68,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedpreferences = getSharedPreferences(MY_PREFERENCES, Context.MODE_PRIVATE);
         setContentView(R.layout.activity_player_lost);
 
         this.trackListView = (ListView) findViewById(R.id.song_list);
@@ -98,6 +103,16 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem checkable = menu.findItem(R.id.checkable_menu);
+        if (sharedpreferences != null && sharedpreferences.contains(IS_CHECKED_KEY)) {
+            this.isChecked = sharedpreferences.getBoolean(IS_CHECKED_KEY, false);
+            checkable.setChecked(this.isChecked);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -106,6 +121,13 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.checkable_menu:
+                this.isChecked = !item.isChecked();
+                item.setChecked(this.isChecked);
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putBoolean(IS_CHECKED_KEY, this.isChecked);
+                editor.commit();
+                return true;
             case R.id.action_end:
                 stopService(this.playIntent);
                 this.service = null;
@@ -164,16 +186,14 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     public int getCurrentPosition() {
         if (this.service != null && this.isBound && this.service.isPlaying()) {
             return this.service.getPosition();
-        }
-        else return 0;
+        } else return 0;
     }
 
     @Override
     public int getDuration() {
         if (this.service != null && this.isBound && this.service.isPlaying()) {
             return this.service.getDuration();
-        }
-        else return 0;
+        } else return 0;
     }
 
     @Override
