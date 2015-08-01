@@ -5,7 +5,8 @@ package lab.android.evgalexandrakaterwth.lostplayer.requestAPI;
  */
 public enum ApiPathEnum {
     ALL_SONGS("http://87.106.23.235:3000/api/list/"),
-    PLAY("http://87.106.23.235:3000/api/play/");
+    PLAY("http://87.106.23.235:3000/api/play/"),
+    GET_RECOMMENDED("http://87.106.23.235:3000/api/list/next");
 
     private final String path;
 

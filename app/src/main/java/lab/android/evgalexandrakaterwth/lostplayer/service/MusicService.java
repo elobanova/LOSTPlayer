@@ -5,7 +5,9 @@ import java.util.List;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -16,8 +18,11 @@ import android.util.Log;
 
 import lab.android.evgalexandrakaterwth.lostplayer.LOSTPlayerActivity;
 import lab.android.evgalexandrakaterwth.lostplayer.R;
+import lab.android.evgalexandrakaterwth.lostplayer.adapter.SongListAdapter;
 import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.GetListOfSongsTask;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.OnResponseListener;
 
 /**
  * Created by ekaterina on 26.07.2015.
@@ -87,9 +92,29 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-        if (this.player.getCurrentPosition() > 0) {
-            mediaPlayer.reset();
-            playNextTrack();
+        SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
+        boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
+        if (doRecommend) {
+            GetListOfSongsTask task = new GetListOfSongsTask(ApiPathEnum.GET_RECOMMENDED);
+            task.setOnResponseListener(new OnResponseListener<List<SongItem>>() {
+                @Override
+                public void onResponse(List<SongItem> songsList) {
+                    SongItem firstClosestSong = songsList.get(0);
+                    setSong((int) firstClosestSong.getID());
+                    playSong();
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Log.e(TAG, errorMessage);
+                }
+            });
+            task.send();
+        } else {
+            if (this.position > 0) {
+                mediaPlayer.reset();
+                playNextTrack();
+            }
         }
     }
 
@@ -121,7 +146,7 @@ public class MusicService extends Service implements
     }
 
     public int getPosition() {
-        return this.player.getCurrentPosition();
+        return this.position;
     }
 
     public int getDuration() {
