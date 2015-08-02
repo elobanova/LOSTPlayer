@@ -115,7 +115,9 @@ public class MusicService extends Service implements
                         }
                     }
             );
-            task.send(new ContextFeatures(), null);
+            ContextFeatures userContext=LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+            if(userContext!=null)
+                task.send(userContext, null);
         } else {
             if (this.position > 0) {
                 mediaPlayer.reset();

@@ -3,6 +3,7 @@ package lab.android.evgalexandrakaterwth.lostplayer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import android.content.SharedPreferences;
@@ -21,6 +22,9 @@ import android.widget.ListView;
 import android.widget.MediaController;
 
 import lab.android.evgalexandrakaterwth.lostplayer.adapter.SongListAdapter;
+import lab.android.evgalexandrakaterwth.lostplayer.context.ContextFeatures;
+import lab.android.evgalexandrakaterwth.lostplayer.context.FunfContextClient;
+import lab.android.evgalexandrakaterwth.lostplayer.funf.QueuePipeline;
 import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.GetListOfSongsTask;
@@ -49,6 +53,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     private boolean isPlaybackPaused = false;
 
     private boolean isChecked = false;
+    private static FunfContextClient funfContextClient;
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -58,6 +63,15 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
             LOSTPlayerActivity.this.service.setList(listOfSongs);
             LOSTPlayerActivity.this.service.setController(controller);
             isBound = true;
+
+            /* modified*/
+            getSongList();
+            Collections.sort(listOfSongs, new Comparator<SongItem>() {
+                public int compare(SongItem song, SongItem other) {
+                    return song.getTitle().compareTo(other.getTitle());
+                }
+            });
+            setController();
         }
 
         @Override
@@ -72,15 +86,30 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
         sharedpreferences = getSharedPreferences(MY_PREFERENCES, Context.MODE_PRIVATE);
         setContentView(R.layout.activity_player_lost);
 
-        this.trackListView = (ListView) findViewById(R.id.song_list);
-        this.listOfSongs = new ArrayList<>();
-        getSongList();
-        Collections.sort(listOfSongs, new Comparator<SongItem>() {
-            public int compare(SongItem song, SongItem other) {
-                return song.getTitle().compareTo(other.getTitle());
+        funfContextClient=new FunfContextClient(this);
+        //print context change, can be removed, or used if notification about change is needed
+        funfContextClient.setOnContextChangedListener(new QueuePipeline.OnContextChangedListener() {
+            @Override
+            public void onChanged(ContextFeatures contextFeatures) {
+
+                Date date = new Date();
+                String context = contextFeatures.getAsJSON().toString();
+                String contextChange = "Context changed: " + date.toString() + " " + context;
+                Log.d(TAG, contextChange);
+
+
             }
         });
-        setController();
+
+
+        this.trackListView = (ListView) findViewById(R.id.song_list);
+        this.listOfSongs = new ArrayList<>();
+
+        /*modified*/
+        //removed getSongList(); etc.
+
+        //2.CONNECT IN ON_CREATE
+        funfContextClient.connect();
     }
 
     @Override
@@ -279,9 +308,14 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
 
     @Override
     protected void onDestroy() {
+        //3. DISCONNECT IN ON_DESTROY
+        funfContextClient.disconnect();
         stopService(playIntent);
         this.service = null;
         super.onDestroy();
     }
 
+    public static FunfContextClient getFunfContextClient() {
+        return funfContextClient;
+    }
 }
