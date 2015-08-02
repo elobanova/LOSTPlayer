@@ -39,6 +39,7 @@ public class MusicService extends Service implements
     private int position;
     private String title = "";
     private final IBinder musicBinder = new MusicBinder();
+    private MusicController controller;
 
     public void onCreate() {
         super.onCreate();
@@ -143,6 +144,9 @@ public class MusicService extends Service implements
                 .setContentText(title);
         Notification notification = builder.build();
         startForeground(NOTIFY_ID, notification);
+        if (this.controller != null) {
+            controller.show(0);
+        }
     }
 
     public int getPosition() {
@@ -188,6 +192,10 @@ public class MusicService extends Service implements
     @Override
     public void onDestroy() {
         stopForeground(true);
+    }
+
+    public void setController(MusicController controller) {
+        this.controller = controller;
     }
 
     public class MusicBinder extends Binder {

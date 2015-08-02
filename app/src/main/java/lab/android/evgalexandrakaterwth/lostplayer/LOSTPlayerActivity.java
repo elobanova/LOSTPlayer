@@ -56,6 +56,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             LOSTPlayerActivity.this.service = binder.getService();
             LOSTPlayerActivity.this.service.setList(listOfSongs);
+            LOSTPlayerActivity.this.service.setController(controller);
             isBound = true;
         }
 
