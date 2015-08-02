@@ -11,7 +11,8 @@ public enum ResponseEnum {
     BADREQUEST(400),
     UNAUTHORIZED(401),
     NOTFOUND(404),
-    SERVICEUNAVAILABLE(503);
+    SERVICEUNAVAILABLE(503),
+    FIVEHUNDREED(500);
 
     private final int code;
 
