@@ -9,6 +9,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 /**
  * Created by evgenijavstein on 08/07/15.
  */
@@ -26,6 +30,7 @@ public class MotionFeatures extends AbstractJSONHandler {
     private double max;
     private double min;
     private double standardDeviation;
+
 
     public MotionFeatures(String relation) {
         this.relation = relation;
@@ -135,15 +140,17 @@ public class MotionFeatures extends AbstractJSONHandler {
         obj.put(WEIGHT_PROPERTY, WEIGHT_VALUE);
 
         JSONArray values = new JSONArray();
-        values.put(average);
-        values.put(max);
-        values.put(min);
-        values.put(sma);
+
+        values.put("/"+doubleFormat(average)+"/");
+        values.put("/"+doubleFormat(max)+"/");
+        values.put("/"+doubleFormat(min)+"/");
+        values.put("/"+doubleFormat(sma)+"/");
 
         obj.put(VALUES_PROPERTY, values);
         data.put(obj);
         return data;
     }
+
 
 
 }

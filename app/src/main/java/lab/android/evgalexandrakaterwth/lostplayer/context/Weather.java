@@ -27,7 +27,7 @@ public class Weather  extends AbstractJSONHandler {
     private double temp;
     private double humidity;
     //clouds in percentage
-    private int clouds;
+    private double clouds;
     //rain volume of last 3h
     private double rainVolume;
 
@@ -36,7 +36,7 @@ public class Weather  extends AbstractJSONHandler {
     private double snowVolume;
 
     //10000 is default, best visibility
-    private int visibility;
+    private double visibility;
 
     public double getSnowVolume() {
         return snowVolume;
@@ -65,11 +65,11 @@ public class Weather  extends AbstractJSONHandler {
         this.humidity = humidity;
     }
 
-    public int getClouds() {
+    public double getClouds() {
         return clouds;
     }
 
-    public void setClouds(int clouds) {
+    public void setClouds(double clouds) {
         this.clouds = clouds;
     }
 
@@ -81,11 +81,11 @@ public class Weather  extends AbstractJSONHandler {
         this.rainVolume = rainVolume;
     }
 
-    public int getVisibility() {
+    public double getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(int visibility) {
+    public void setVisibility(double visibility) {
         this.visibility = visibility;
     }
 
@@ -158,12 +158,12 @@ public class Weather  extends AbstractJSONHandler {
         JSONArray values=new JSONArray();
 
 
-        values.put(temp==0.0d?"?":temp);
-        values.put(humidity==0.0d?"?":humidity);
-        values.put(clouds==0?"?":clouds);
-        values.put(rainVolume==0.0d?"?":rainVolume);
-        values.put(snowVolume==0.0d?"?":snowVolume);
-        values.put(visibility==0?"?":visibility);
+        values.put(temp==0.0d?"?":"/"+doubleFormat(temp)+"/");
+        values.put(humidity==0.0d?"?":"/"+doubleFormat(humidity)+"/");
+        values.put(clouds==0.0d?"?":doubleFormat(clouds));
+        values.put(rainVolume==0.0d?"?":"/"+doubleFormat(rainVolume)+"/");
+        values.put(snowVolume==0.0d?"?":"/"+doubleFormat(snowVolume)+"/");
+        values.put(visibility==0.0d?"?":"/"+doubleFormat(visibility)+"/");
 
 
         obj.put(VALUES_PROPERTY,values );

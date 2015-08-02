@@ -123,9 +123,9 @@ public class UserTime extends AbstractJSONHandler {
         obj.put(WEIGHT_PROPERTY,WEIGHT_VALUE);
 
         JSONArray values=new JSONArray();
-        values.put(season);
-        values.put(dayOfWeek);
-        values.put(timeOfDay);
+        values.put("/"+doubleFormat(season)+"/");
+        values.put("/"+doubleFormat(dayOfWeek)+"/");
+        values.put("/"+doubleFormat(timeOfDay)+"/");
 
 
         obj.put(VALUES_PROPERTY,values );

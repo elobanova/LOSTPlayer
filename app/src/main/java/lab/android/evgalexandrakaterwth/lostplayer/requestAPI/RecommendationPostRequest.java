@@ -60,12 +60,14 @@ public class RecommendationPostRequest {
         protected List<SongItem> doInBackground(ContextFeatures... args) {
             HttpURLConnection conn = null;
             try {
-                JSONObject learningObj = new JSONObject();
+                JSONObject recommendReqObj = new JSONObject();
                 JSONObject userObj = new JSONObject();
                 userObj.put(USERID, user);
 
-                learningObj.put(CONTEXT, args[0].getAsJSON());
-                learningObj.put(USER, userObj);
+                recommendReqObj.put(CONTEXT, args[0].getAsJSON());
+                recommendReqObj.put(USER, userObj);
+                String playLoad=recommendReqObj.toString().replaceAll("\"weight\":1", "\"weight\":1.0");
+                       playLoad=playLoad.replace("/\"", "").replace("\"/", "");
 
                 URL url = new URL(path);
 
@@ -75,7 +77,7 @@ public class RecommendationPostRequest {
 
                 conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                 conn.setRequestProperty("Content-Length", "" +
-                        Integer.toString(learningObj.toString().length()));
+                        Integer.toString(playLoad.length()));
                 conn.setRequestProperty("Content-Language", "en-US");
 
                 conn.setUseCaches(false);
@@ -84,7 +86,8 @@ public class RecommendationPostRequest {
 
                 DataOutputStream dataOutputStream = new DataOutputStream(
                         conn.getOutputStream());
-                dataOutputStream.write(learningObj.toString().getBytes("UTF-8"));
+
+                dataOutputStream.write(playLoad.getBytes("UTF-8"));
                 dataOutputStream.flush();
                 dataOutputStream.close();
 

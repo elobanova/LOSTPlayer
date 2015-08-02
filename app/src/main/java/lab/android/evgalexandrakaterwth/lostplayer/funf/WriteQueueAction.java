@@ -195,9 +195,9 @@ public class WriteQueueAction extends Action implements Probe.DataListener {
             weatherContext.setHumidity(weather.get("main").getAsJsonObject().get("humidity").getAsDouble());
 
             if (weather.get("clouds") != null)
-                weatherContext.setClouds(weather.get("clouds").getAsJsonObject().get("all").getAsInt());
+                weatherContext.setClouds(weather.get("clouds").getAsJsonObject().get("all").getAsDouble());
             if (weather.get("visibility") != null)
-                weatherContext.setVisibility(weather.get("visibility").getAsInt());
+                weatherContext.setVisibility(weather.get("visibility").getAsDouble());
             if (weather.get("rain") != null)
                 //workaround because the API can return 1h,2h,3h...rain volumes, we skip the h key and take just the volume
                 weatherContext.setRainVolume(Double.parseDouble(weather.get("rain").getAsJsonObject().toString().split(":")[1].replace("}", "")));

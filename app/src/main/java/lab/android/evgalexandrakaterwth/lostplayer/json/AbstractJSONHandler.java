@@ -4,6 +4,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 /**
  * Created by evgenijavstein on 12/07/15.
  */
@@ -27,6 +31,9 @@ public abstract class AbstractJSONHandler {
     public static final boolean IS_ATTRIBUTE_CLASS = false;
     public static final double WEIGHT_VALUE = 1.0;
 
+
+
+
     /**
      * Returns JSON representation as needed by parser of lerning lib
      *
@@ -44,6 +51,16 @@ public abstract class AbstractJSONHandler {
 
 
         return motionFeatures;
+    }
+
+    /**
+     * Forbids scientific double representaiton
+     * @return
+     */
+    protected String doubleFormat(double d){
+        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        df.setMaximumFractionDigits(340);
+        return df.format(d);
     }
 
     protected abstract JSONObject prepareHeader() throws JSONException;

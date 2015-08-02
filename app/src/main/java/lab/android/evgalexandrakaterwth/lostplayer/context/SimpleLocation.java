@@ -76,8 +76,8 @@ public class SimpleLocation  extends AbstractJSONHandler {
         obj.put(WEIGHT_PROPERTY,WEIGHT_VALUE);
 
         JSONArray values=new JSONArray();
-        values.put(mLatitude==0.0d?"?":mLatitude);
-        values.put(mLongitude==0.0d?"?":mLongitude);
+        values.put(mLatitude==0.0d?"?":"/"+doubleFormat(mLatitude)+"/");
+        values.put(mLongitude==0.0d?"?":"/"+doubleFormat(mLongitude)+"/");
 
 
         obj.put(VALUES_PROPERTY,values );
