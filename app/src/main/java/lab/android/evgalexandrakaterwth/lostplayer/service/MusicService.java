@@ -150,7 +150,7 @@ public class MusicService extends Service implements
     }
 
     public int getPosition() {
-        return this.position;
+        return this.player.getCurrentPosition();
     }
 
     public int getDuration() {
