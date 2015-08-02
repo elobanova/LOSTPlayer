@@ -18,12 +18,10 @@ import android.util.Log;
 
 import lab.android.evgalexandrakaterwth.lostplayer.LOSTPlayerActivity;
 import lab.android.evgalexandrakaterwth.lostplayer.R;
-import lab.android.evgalexandrakaterwth.lostplayer.adapter.SongListAdapter;
 import lab.android.evgalexandrakaterwth.lostplayer.context.ContextFeatures;
 import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
-import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.GetListOfSongsTask;
-import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.LearnPostRequest;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.RecommendationPostRequest;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.OnResponseListener;
 
 /**
@@ -98,12 +96,17 @@ public class MusicService extends Service implements
         SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
         boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
         if (doRecommend) {
-            LearnPostRequest task = new LearnPostRequest(getApplicationContext(), ApiPathEnum.GET_RECOMMENDED.getPath());
+            RecommendationPostRequest task = new RecommendationPostRequest(getApplicationContext(), ApiPathEnum.GET_RECOMMENDED.getPath());
             task.setOnResponseListener(
-                    new OnResponseListener<Boolean>() {
+                    new OnResponseListener<List<SongItem>>() {
                         @Override
-                        public void onResponse(Boolean success) {
+                        public void onResponse(List<SongItem> songItemList) {
                             Log.i(TAG, "Success");
+                            if (songItemList != null && songItemList.size() > 0) {
+                                SongItem firstClosestSong = songItemList.get(0);
+                                setSong((int) firstClosestSong.getID());
+                                playSong();
+                            }
                         }
 
                         @Override
@@ -112,24 +115,7 @@ public class MusicService extends Service implements
                         }
                     }
             );
-            task.send(new ContextFeatures(), position, null, true);
-//            GetListOfSongsTask task = new GetListOfSongsTask(ApiPathEnum.GET_RECOMMENDED);
-//            task.setOnResponseListener(new OnResponseListener<List<SongItem>>() {
-//                @Override
-//                public void onResponse(List<SongItem> songsList) {
-//                    if (songsList != null && songsList.size() > 0) {
-//                        SongItem firstClosestSong = songsList.get(0);
-//                        setSong((int) firstClosestSong.getID());
-//                        playSong();
-//                    }
-//                }
-//
-//                @Override
-//                public void onError(String errorMessage) {
-//                    Log.e(TAG, errorMessage);
-//                }
-//            });
-//            task.send();
+            task.send(new ContextFeatures(), null);
         } else {
             if (this.position > 0) {
                 mediaPlayer.reset();

@@ -7,21 +7,23 @@ import android.provider.Settings;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import lab.android.evgalexandrakaterwth.lostplayer.context.ContextFeatures;
+import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 
 
 /**
  * Created by evgenijavstein on 26/07/15.
  */
-public class LearnPostRequest {
-    public static final String FILE_INDEX = "fileIndex";
-    public static final String FEED_BACK = "feedBack";
+public class RecommendationPostRequest {
     public static final String USER = "user";
     public static final String CONTEXT = "context";
     public static final String USERID = "userid";
@@ -30,7 +32,7 @@ public class LearnPostRequest {
     private OnResponseListener onResponseListener;
     private final String path;
 
-    public LearnPostRequest(Context context, String path) {
+    public RecommendationPostRequest(Context context, String path) {
         this.context = context;
         this.path = path;
     }
@@ -39,36 +41,23 @@ public class LearnPostRequest {
         this.onResponseListener = onResponseListener;
     }
 
-    /**
-     * Send context mapped with song listened too. Use both for negative and positive
-     * feedback, both will be passed to ML module on server.
-     *
-     * @param userContext
-     * @param songIndex
-     * @param user
-     * @param feedBack    true if positive
-     */
-    public void send(ContextFeatures userContext, int songIndex, String user, boolean feedBack) {
-        new HttpPostLearnTask(songIndex, user, feedBack).execute(userContext);
+    public void send(ContextFeatures userContext, String user) {
+        new HttpPostLearnTask(user).execute(userContext);
     }
 
-    private class HttpPostLearnTask extends AsyncTask<ContextFeatures, Void, Boolean> {
+    private class HttpPostLearnTask extends AsyncTask<ContextFeatures, Void, List<SongItem>> {
         private String user;
-        private int fileIndex;
-        boolean feedBack = false;
 
-        public HttpPostLearnTask(int fileIndex, String user, boolean feedback) {
+        public HttpPostLearnTask(String user) {
             if (user == null)
                 this.user = Settings.Secure.getString(context.getContentResolver(),
                         Settings.Secure.ANDROID_ID);
             else
                 this.user = user;
-            this.fileIndex = fileIndex;
-            this.feedBack = feedback;
         }
 
         @Override
-        protected Boolean doInBackground(ContextFeatures... args) {
+        protected List<SongItem> doInBackground(ContextFeatures... args) {
             HttpURLConnection conn = null;
             try {
                 JSONObject learningObj = new JSONObject();
@@ -77,8 +66,6 @@ public class LearnPostRequest {
 
                 learningObj.put(CONTEXT, args[0].getAsJSON());
                 learningObj.put(USER, userObj);
-                learningObj.put(FILE_INDEX, fileIndex);
-                learningObj.put(FEED_BACK, feedBack);
 
                 URL url = new URL(path);
 
@@ -105,8 +92,14 @@ public class LearnPostRequest {
                 ResponseEnum responseCode = ResponseEnum.getResponseEnumByCode(status);
                 switch (responseCode) {
                     case OK:
-                    case CREATED:
-                        return true;
+                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line + "\n");
+                        }
+                        br.close();
+                        return JSONSongListParser.parse(sb.toString());
                 }
             } catch (MalformedURLException e) {
                 onResponseListener.onError(e.getMessage());
@@ -119,13 +112,13 @@ public class LearnPostRequest {
                     conn.disconnect();
                 }
             }
-            return false;
+            return null;
         }
 
         @Override
-        protected void onPostExecute(Boolean isCreated) {
-            super.onPostExecute(isCreated);
-            onResponseListener.onResponse(isCreated);
+        protected void onPostExecute(List<SongItem> songList) {
+            super.onPostExecute(songList);
+            onResponseListener.onResponse(songList);
         }
     }
 
