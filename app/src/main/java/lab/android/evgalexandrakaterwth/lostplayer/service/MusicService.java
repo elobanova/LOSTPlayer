@@ -21,6 +21,7 @@ import lab.android.evgalexandrakaterwth.lostplayer.R;
 import lab.android.evgalexandrakaterwth.lostplayer.context.ContextFeatures;
 import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
+import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.LearnPostRequest;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.RecommendationPostRequest;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.OnResponseListener;
 
@@ -102,6 +103,27 @@ public class MusicService extends Service implements
                 mediaPlayer.reset();
                 playNextTrack();
             }
+        }
+        //anyways send learning data
+        sendLearningData(true);
+    }
+
+    public void sendLearningData(boolean isPositive) {
+        LearnPostRequest request = new LearnPostRequest(getApplicationContext(), ApiPathEnum.LEARN.getPath());
+        request.setOnResponseListener(new OnResponseListener<Boolean>() {
+            @Override
+            public void onResponse(Boolean response) {
+                Log.i(TAG, "Result of learn send: " + response);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        });
+        ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+        if (userContext != null) {
+            request.send(userContext, this.position, null, isPositive);
         }
     }
 
