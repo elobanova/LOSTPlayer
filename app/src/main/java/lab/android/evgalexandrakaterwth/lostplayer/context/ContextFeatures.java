@@ -1,7 +1,5 @@
 package lab.android.evgalexandrakaterwth.lostplayer.context;
 
-
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,19 +10,15 @@ import lab.android.evgalexandrakaterwth.lostplayer.json.AbstractJSONHandler;
  * Created by evgenijavstein on 04/07/15.
  */
 public class ContextFeatures extends AbstractJSONHandler {
-
-
-    public ContextFeatures() {
-
-    }
-
-
     protected MotionFeatures[] accelerationFeatures;
     protected MotionFeatures[] gyroscopeFeatures;
     protected Weather weather;
     protected SimpleLocation location;
     protected UserTime userTime;
     private String relation = "contextInstance";
+
+    public ContextFeatures() {
+    }
 
     public MotionFeatures[] getAccelerationFeatures() {
         return accelerationFeatures;
@@ -47,33 +41,23 @@ public class ContextFeatures extends AbstractJSONHandler {
     }
 
     public void setAccelerationFeatures(MotionFeatures[] accelerationFeatures) {
-
         this.accelerationFeatures = accelerationFeatures;
-
     }
 
     public void setGyroscopeFeatures(MotionFeatures[] gyroscopeFeatures) {
-
         this.gyroscopeFeatures = gyroscopeFeatures;
-
     }
 
     public void setWeather(Weather weather) {
-
         this.weather = weather;
-
     }
 
     public void setLocation(SimpleLocation simpleLocation) {
-
         this.location = simpleLocation;
-
     }
 
     public void setUserTime(UserTime userTime) {
-
         this.userTime = userTime;
-
     }
 
     /**
@@ -84,8 +68,6 @@ public class ContextFeatures extends AbstractJSONHandler {
      */
     @Override
     protected JSONObject prepareHeader() throws JSONException {
-
-
         if (this.weather == null) {
             this.weather = new Weather();//we create an empty object
             //in that case it produces a data filled with question marks
@@ -117,7 +99,6 @@ public class ContextFeatures extends AbstractJSONHandler {
         return header;
     }
 
-
     /**
      * Gathers all data from sub context instances
      *
@@ -138,19 +119,18 @@ public class ContextFeatures extends AbstractJSONHandler {
                 getJSONDataList(this.weather, AbstractJSONHandler.DATA_PROPERTY, AbstractJSONHandler.VALUES_PROPERTY)
         );
 
-
-        JSONArray data=new JSONArray();
-        JSONObject obj=new JSONObject();
-        obj.put(SPARSE_ATTRIBUTE_NAME,false);
-        obj.put(WEIGHT_PROPERTY,WEIGHT_VALUE);
-        obj.put(VALUES_PROPERTY,values );
+        JSONArray data = new JSONArray();
+        JSONObject obj = new JSONObject();
+        obj.put(SPARSE_ATTRIBUTE_NAME, false);
+        obj.put(WEIGHT_PROPERTY, WEIGHT_VALUE);
+        obj.put(VALUES_PROPERTY, values);
         data.put(obj);
         return data;
     }
 
-
     /**
      * Retrieves data or attribute description list for a single sub context
+     *
      * @param featuresData
      * @param field
      * @param array
@@ -158,21 +138,18 @@ public class ContextFeatures extends AbstractJSONHandler {
      * @throws JSONException
      */
     private JSONArray getJSONDataList(AbstractJSONHandler featuresData, String field, String array) throws JSONException {
-        JSONArray jsonFeatureDataList=null;
-
+        JSONArray jsonFeatureDataList = null;
 
         JSONObject jsonFeaturesData = featuresData.getAsJSON();
-        if(field.equals(AbstractJSONHandler.HEADER_PROPERTY)){
-            jsonFeatureDataList= jsonFeaturesData.
+        if (field.equals(AbstractJSONHandler.HEADER_PROPERTY)) {
+            jsonFeatureDataList = jsonFeaturesData.
                     getJSONObject(field).getJSONArray(array);
-        }else if(field.equals(AbstractJSONHandler.DATA_PROPERTY)){
-           jsonFeatureDataList=jsonFeaturesData.getJSONArray(field).getJSONObject(0).getJSONArray(array);
+        } else if (field.equals(AbstractJSONHandler.DATA_PROPERTY)) {
+            jsonFeatureDataList = jsonFeaturesData.getJSONArray(field).getJSONObject(0).getJSONArray(array);
         }
 
         return jsonFeatureDataList;
     }
-
-
 
     private JSONArray concatArray(JSONArray... arrs)
             throws JSONException {

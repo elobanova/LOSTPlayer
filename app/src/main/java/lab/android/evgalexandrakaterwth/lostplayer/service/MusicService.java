@@ -115,8 +115,8 @@ public class MusicService extends Service implements
                         }
                     }
             );
-            ContextFeatures userContext=LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
-            if(userContext!=null)
+            ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+            if (userContext != null)
                 task.send(userContext, null);
         } else {
             if (this.position > 0) {
