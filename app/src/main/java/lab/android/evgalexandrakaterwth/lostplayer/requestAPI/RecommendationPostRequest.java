@@ -66,8 +66,7 @@ public class RecommendationPostRequest {
 
                 recommendReqObj.put(CONTEXT, args[0].getAsJSON());
                 recommendReqObj.put(USER, userObj);
-                String playLoad=recommendReqObj.toString().replaceAll("\"weight\":1", "\"weight\":1.0");
-                       playLoad=playLoad.replace("/\"", "").replace("\"/", "");
+                String playLoad=recommendReqObj.toString();
 
                 URL url = new URL(path);
 
