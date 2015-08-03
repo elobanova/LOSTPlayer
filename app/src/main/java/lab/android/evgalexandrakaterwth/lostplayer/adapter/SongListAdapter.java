@@ -18,7 +18,7 @@ import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
  * Created by ekaterina on 26.07.2015.
  */
 public class SongListAdapter extends BaseAdapter {
-    private List<SongItem> listOfSongs = new ArrayList<>();
+    private List<SongItem> listOfSongs;
     private final Context context;
 
     public SongListAdapter(Context context, List<SongItem> listOfSongs) {
@@ -28,10 +28,7 @@ public class SongListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        if (this.listOfSongs != null)
-            return this.listOfSongs.size();
-
-        return 0;
+        return this.listOfSongs.size();
     }
 
     @Override

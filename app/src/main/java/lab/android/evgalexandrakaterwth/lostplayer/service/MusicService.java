@@ -96,34 +96,38 @@ public class MusicService extends Service implements
         SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
         boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
         if (doRecommend) {
-            RecommendationPostRequest task = new RecommendationPostRequest(getApplicationContext(), ApiPathEnum.GET_RECOMMENDED.getPath());
-            task.setOnResponseListener(
-                    new OnResponseListener<List<SongItem>>() {
-                        @Override
-                        public void onResponse(List<SongItem> songItemList) {
-                            Log.i(TAG, "Success");
-                            if (songItemList != null && songItemList.size() > 0) {
-                                SongItem firstClosestSong = songItemList.get(0);
-                                setSong((int) firstClosestSong.getID());
-                                playSong();
-                            }
-                        }
-
-                        @Override
-                        public void onError(String errorMessage) {
-                            Log.e(TAG, errorMessage);
-                        }
-                    }
-            );
-            ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
-            if (userContext != null)
-                task.send(userContext, null);
+            playRecommended();
         } else {
-            if (this.position > 0) {
+            if (this.position >= 0) {
                 mediaPlayer.reset();
                 playNextTrack();
             }
         }
+    }
+
+    public void playRecommended() {
+        RecommendationPostRequest task = new RecommendationPostRequest(getApplicationContext(), ApiPathEnum.GET_RECOMMENDED.getPath());
+        task.setOnResponseListener(
+                new OnResponseListener<List<SongItem>>() {
+                    @Override
+                    public void onResponse(List<SongItem> songItemList) {
+                        Log.i(TAG, "Success");
+                        if (songItemList != null && songItemList.size() > 0) {
+                            SongItem firstClosestSong = songItemList.get(0);
+                            setSong((int) firstClosestSong.getID());
+                            playSong();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Log.e(TAG, errorMessage);
+                    }
+                }
+        );
+        ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+        if (userContext != null)
+            task.send(userContext, null);
     }
 
     @Override

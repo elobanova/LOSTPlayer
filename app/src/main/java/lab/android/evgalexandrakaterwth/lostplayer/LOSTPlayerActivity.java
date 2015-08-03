@@ -71,7 +71,6 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
                     return song.getTitle().compareTo(other.getTitle());
                 }
             });
-            setController();
         }
 
         @Override
@@ -86,28 +85,24 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
         sharedpreferences = getSharedPreferences(MY_PREFERENCES, Context.MODE_PRIVATE);
         setContentView(R.layout.activity_player_lost);
 
-        funfContextClient=new FunfContextClient(this);
+        funfContextClient = new FunfContextClient(this);
         //print context change, can be removed, or used if notification about change is needed
         funfContextClient.setOnContextChangedListener(new QueuePipeline.OnContextChangedListener() {
             @Override
             public void onChanged(ContextFeatures contextFeatures) {
-
                 Date date = new Date();
                 String context = contextFeatures.getAsJSON().toString();
                 String contextChange = "Context changed: " + date.toString() + " " + context;
                 Log.d(TAG, contextChange);
-
-
             }
         });
-
 
         this.trackListView = (ListView) findViewById(R.id.song_list);
         this.listOfSongs = new ArrayList<>();
 
         /*modified*/
         //removed getSongList(); etc.
-
+        setController();
         //2.CONNECT IN ON_CREATE
         funfContextClient.connect();
     }
@@ -116,7 +111,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     protected void onStart() {
         super.onStart();
         if (this.playIntent == null) {
-            this.playIntent = new Intent(this, MusicService.class);
+            this.playIntent = new Intent(getApplicationContext(), MusicService.class);
             bindService(this.playIntent, this.musicConnection, Context.BIND_AUTO_CREATE);
             startService(this.playIntent);
         }
@@ -268,7 +263,13 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     }
 
     private void playNext() {
-        this.service.playNextTrack();
+        SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
+        boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
+        if (doRecommend) {
+            this.service.playRecommended();
+        } else {
+            this.service.playNextTrack();
+        }
         if (this.isPlaybackPaused) {
             setController();
             this.isPlaybackPaused = false;
