@@ -60,7 +60,10 @@ public abstract class AbstractJSONHandler {
     protected String doubleFormat(double d){
         DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
         df.setMaximumFractionDigits(340);
-        return df.format(d);
+        String s=df.format(d);
+        if(!s.contains("."))//workaround accept maximum fraction digits, but produce 0.0 for 0 etc.
+            s=s+".0";
+        return s;
     }
 
     protected abstract JSONObject prepareHeader() throws JSONException;
