@@ -41,11 +41,11 @@ public class RecommendationPostRequest {
         this.onResponseListener = onResponseListener;
     }
 
-    public void send(ContextFeatures userContext, String user) {
+    public void send(JSONObject userContext, String user) {
         new HttpPostLearnTask(user).execute(userContext);
     }
 
-    private class HttpPostLearnTask extends AsyncTask<ContextFeatures, Void, List<SongItem>> {
+    private class HttpPostLearnTask extends AsyncTask<JSONObject, Void, List<SongItem>> {
         private String user;
 
         public HttpPostLearnTask(String user) {
@@ -57,14 +57,14 @@ public class RecommendationPostRequest {
         }
 
         @Override
-        protected List<SongItem> doInBackground(ContextFeatures... args) {
+        protected List<SongItem> doInBackground(JSONObject... args) {
             HttpURLConnection conn = null;
             try {
                 JSONObject recommendReqObj = new JSONObject();
                 JSONObject userObj = new JSONObject();
                 userObj.put(USERID, user);
 
-                recommendReqObj.put(CONTEXT, args[0].getAsJSON());
+                recommendReqObj.put(CONTEXT, args[0]);
                 recommendReqObj.put(USER, userObj);
                 String playLoad=recommendReqObj.toString();
 

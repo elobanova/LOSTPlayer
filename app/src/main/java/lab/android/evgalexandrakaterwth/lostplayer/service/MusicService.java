@@ -6,6 +6,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -15,10 +16,10 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-
+import org.json.JSONObject;
 import lab.android.evgalexandrakaterwth.lostplayer.LOSTPlayerActivity;
 import lab.android.evgalexandrakaterwth.lostplayer.R;
-import lab.android.evgalexandrakaterwth.lostplayer.context.ContextFeatures;
+import lab.android.evgalexandrakaterwth.lostplayer.context.FunfContextClient;
 import lab.android.evgalexandrakaterwth.lostplayer.model.SongItem;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.ApiPathEnum;
 import lab.android.evgalexandrakaterwth.lostplayer.requestAPI.LearnPostRequest;
@@ -95,9 +96,9 @@ public class MusicService extends Service implements
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
-        boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
-        if (doRecommend) {
-            playRecommended();
+        int recommendOpt = pref.getInt(LOSTPlayerActivity.IS_CHECKED_KEY, LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT);
+        if (recommendOpt != LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT) {
+            playRecommended(recommendOpt);
         } else {
             if (this.position >= 0) {
                 mediaPlayer.reset();
@@ -105,10 +106,11 @@ public class MusicService extends Service implements
             }
         }
         //anyways send learning data
-        sendLearningData(true);
+
+        sendLearningData(true, recommendOpt);
     }
 
-    public void sendLearningData(boolean isPositive) {
+    public void sendLearningData(boolean isPositive, int recommendOpt) {
         LearnPostRequest request = new LearnPostRequest(getApplicationContext(), ApiPathEnum.LEARN.getPath());
         request.setOnResponseListener(new OnResponseListener<Boolean>() {
             @Override
@@ -121,13 +123,13 @@ public class MusicService extends Service implements
                 Log.e(TAG, errorMessage);
             }
         });
-        ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+        JSONObject userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext(recommendOpt);//learn on selected context
         if (userContext != null) {
             request.send(userContext, this.position, null, isPositive);
         }
     }
 
-    public void playRecommended() {
+    public void playRecommended(int recommendOpt) {
         RecommendationPostRequest task = new RecommendationPostRequest(getApplicationContext(), ApiPathEnum.GET_RECOMMENDED.getPath());
         task.setOnResponseListener(
                 new OnResponseListener<List<SongItem>>() {
@@ -147,7 +149,7 @@ public class MusicService extends Service implements
                     }
                 }
         );
-        ContextFeatures userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext();
+        JSONObject userContext = LOSTPlayerActivity.getFunfContextClient().getCurrentContext(recommendOpt);
         if (userContext != null)
             task.send(userContext, null);
     }

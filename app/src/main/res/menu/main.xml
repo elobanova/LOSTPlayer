@@ -1,13 +1,32 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/checkable_menu"
-        android:orderInCategory="1"
-        android:checkable="true"
-        android:title="@string/checkable"/>
-    <item
-        android:id="@+id/action_end"
-        android:icon="@drawable/stop_service"
-        android:orderInCategory="2"
-        android:showAsAction="always"
-        android:title="@string/stopplay" />
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/checkable_norecommend_menu"
+            android:orderInCategory="1"
+
+            android:title="@string/no_recommend_menu_learning"/>
+
+        <item
+            android:id="@+id/checkable_recommend_menu"
+            android:orderInCategory="2"
+
+            android:title="@string/checkable"/>
+        <item
+            android:id="@+id/checkable_recommend_running_menu"
+            android:title="@string/recommend_menu_running"
+            android:orderInCategory="3"
+            />
+        <item
+            android:id="@+id/checkable_recommend_learning_menu"
+            android:title="@string/recommend_menu_learning"
+            android:orderInCategory="4"
+            />
+        <item
+            android:id="@+id/action_end"
+            android:icon="@drawable/stop_service"
+            android:orderInCategory="2"
+            android:showAsAction="always"
+            android:title="@string/stopplay" />
+    </group>
+
 </menu>

@@ -47,11 +47,11 @@ public class LearnPostRequest {
      * @param user
      * @param feedBack    true if positive
      */
-    public void send(ContextFeatures userContext, int songIndex, String user, boolean feedBack) {
+    public void send(JSONObject userContext, int songIndex, String user, boolean feedBack) {
         new HttpPostLearnTask(songIndex, user, feedBack).execute(userContext);
     }
 
-    private class HttpPostLearnTask extends AsyncTask<ContextFeatures, Void, Boolean> {
+    private class HttpPostLearnTask extends AsyncTask<JSONObject, Void, Boolean> {
         private String user;
         private int fileIndex;
         boolean feedBack = false;
@@ -68,7 +68,7 @@ public class LearnPostRequest {
         }
 
         @Override
-        protected Boolean doInBackground(ContextFeatures... args) {
+        protected Boolean doInBackground(JSONObject... args) {
             HttpURLConnection conn = null;
 
             try {
@@ -76,7 +76,7 @@ public class LearnPostRequest {
                 JSONObject userObj = new JSONObject();
                 userObj.put(USERID, user);
 
-                learningObj.put(CONTEXT, args[0].getAsJSON());
+                learningObj.put(CONTEXT, args[0]);
                 learningObj.put(USER, userObj);
                 learningObj.put(FILE_INDEX, fileIndex);
                 learningObj.put(FEED_BACK, feedBack);

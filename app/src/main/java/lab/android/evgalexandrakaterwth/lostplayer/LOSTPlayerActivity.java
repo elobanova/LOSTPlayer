@@ -38,6 +38,12 @@ import lab.android.evgalexandrakaterwth.lostplayer.service.MusicService;
 public class LOSTPlayerActivity extends Activity implements MediaController.MediaPlayerControl {
     private static final String TAG = "LOST Player Activity";
     public static final String IS_CHECKED_KEY = "isCheckedKey";
+
+    public static final int NO_RECOMMEND_ON_CONTEXT = 0;
+    public static final int RECOMMEND_ON_CONTEXT = 1;
+    public static final int RECOMMEND_ON_RUNNING_CONTEXT = 2;
+    public static final int RECOMMEND_ON_LEARNING_CONTEXT = 3;
+
     public static final String MY_PREFERENCES = "MyPrefs";
     private static SharedPreferences sharedpreferences;
 
@@ -52,7 +58,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
     private boolean isPaused = false;
     private boolean isPlaybackPaused = false;
 
-    private boolean isChecked = false;
+    private int checked;
     private static FunfContextClient funfContextClient;
     private ServiceConnection musicConnection = new ServiceConnection() {
 
@@ -129,11 +135,32 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem checkable = menu.findItem(R.id.checkable_menu);
-        if (sharedpreferences != null && sharedpreferences.contains(IS_CHECKED_KEY)) {
-            this.isChecked = sharedpreferences.getBoolean(IS_CHECKED_KEY, false);
-            checkable.setChecked(this.isChecked);
-        }
+        MenuItem checkable;
+        if (sharedpreferences != null)
+
+
+                this.checked = sharedpreferences.getInt(IS_CHECKED_KEY, NO_RECOMMEND_ON_CONTEXT);
+                switch (checked) {
+                    case NO_RECOMMEND_ON_CONTEXT:
+                        checkable = menu.findItem(R.id.checkable_norecommend_menu);
+                        checkable.setChecked(true);
+                        break;
+                    case RECOMMEND_ON_CONTEXT:
+                        checkable = menu.findItem(R.id.checkable_recommend_menu);
+                        checkable.setChecked(true);
+                        break;
+                    case RECOMMEND_ON_RUNNING_CONTEXT:
+                        checkable = menu.findItem(R.id.checkable_recommend_running_menu);
+                        checkable.setChecked(true);
+                        break;
+                    case RECOMMEND_ON_LEARNING_CONTEXT:
+                        checkable = menu.findItem(R.id.checkable_recommend_learning_menu);
+                        checkable.setChecked(true);
+                        break;
+                }
+
+
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -145,14 +172,36 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
         switch (item.getItemId()) {
-            case R.id.checkable_menu:
-                this.isChecked = !item.isChecked();
-                item.setChecked(this.isChecked);
-                SharedPreferences.Editor editor = sharedpreferences.edit();
-                editor.putBoolean(IS_CHECKED_KEY, this.isChecked);
+            case R.id.checkable_norecommend_menu:
+                item.setChecked(true);
+
+                editor.putInt(IS_CHECKED_KEY, NO_RECOMMEND_ON_CONTEXT);
                 editor.commit();
                 return true;
+            case R.id.checkable_recommend_menu:
+
+                item.setChecked(true);
+
+                editor.putInt(IS_CHECKED_KEY, RECOMMEND_ON_CONTEXT);
+                editor.commit();
+                return true;
+            case R.id.checkable_recommend_running_menu:
+
+                item.setChecked(true);
+
+                editor.putInt(IS_CHECKED_KEY, RECOMMEND_ON_RUNNING_CONTEXT);
+                editor.commit();
+                return true;
+            case R.id.checkable_recommend_learning_menu:
+
+                item.setChecked(true);
+
+                editor.putInt(IS_CHECKED_KEY, RECOMMEND_ON_LEARNING_CONTEXT);
+                editor.commit();
+                return true;
+
             case R.id.action_end:
                 stopService(this.playIntent);
                 this.service = null;
@@ -264,9 +313,9 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
 
     private void playNext() {
         SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
-        boolean doRecommend = pref.getBoolean(LOSTPlayerActivity.IS_CHECKED_KEY, false);
-        if (doRecommend) {
-            this.service.playRecommended();
+        int recommendOpt = pref.getInt(LOSTPlayerActivity.IS_CHECKED_KEY, NO_RECOMMEND_ON_CONTEXT);
+        if (recommendOpt!=0) {
+            this.service.playRecommended(recommendOpt);
         } else {
             this.service.playNextTrack();
         }
@@ -275,7 +324,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
             this.isPlaybackPaused = false;
         }
         //learn anyways, false because skipped
-        this.service.sendLearningData(false);
+        this.service.sendLearningData(false,recommendOpt);
         this.controller.show(0);
     }
 

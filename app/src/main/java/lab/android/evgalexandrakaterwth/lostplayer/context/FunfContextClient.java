@@ -6,9 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+
+import lab.android.evgalexandrakaterwth.lostplayer.LOSTPlayerActivity;
+import lab.android.evgalexandrakaterwth.lostplayer.R;
 import lab.android.evgalexandrakaterwth.lostplayer.funf.QueuePipeline.OnContextChangedListener;
 import com.google.gson.Gson;
 
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.mit.media.funf.FunfManager;
 import lab.android.evgalexandrakaterwth.lostplayer.funf.QueuePipeline;
@@ -53,6 +59,7 @@ public class FunfContextClient {
     private FunfManager funfManager;
     private QueuePipeline pipeline;
     private Activity activity;
+
 
     private OnContextChangedListener onContextChangedListener;
     private ServiceConnection funfManagerConn=funfManagerConn = new ServiceConnection() {
@@ -113,9 +120,26 @@ public class FunfContextClient {
      * to be notified.
      * @return
      */
-    public ContextFeatures getCurrentContext(){
-        return pipeline.getContextFeatures();
+    public JSONObject getCurrentContext(int contextMode ){
+        try {
+        switch(contextMode){
+            case LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT:
+                return pipeline.getContextFeatures().getAsJSON();//learnig is still done
+            case LOSTPlayerActivity.RECOMMEND_ON_CONTEXT:
+                return pipeline.getContextFeatures().getAsJSON();
+            case LOSTPlayerActivity.RECOMMEND_ON_RUNNING_CONTEXT:
 
+                    return new JSONObject(activity.getString(R.string.runningContextJson));
+
+            case LOSTPlayerActivity.RECOMMEND_ON_LEARNING_CONTEXT:
+                return new JSONObject(activity.getString(R.string.learningContext));
+            default:
+                return pipeline.getContextFeatures().getAsJSON();
+        }
+
+        } catch (JSONException e) {
+            return null;
+        }
     }
 
     /**
