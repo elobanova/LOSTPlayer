@@ -46,7 +46,9 @@ public abstract class AbstractJSONHandler {
             motionFeatures.put(HEADER_PROPERTY, prepareHeader());
             motionFeatures.put(DATA_PROPERTY, prepareData());
         } catch (JSONException e) {
-            e.printStackTrace();
+           return null;
+        }catch(NullPointerException e){
+            return null;
         }
 
 

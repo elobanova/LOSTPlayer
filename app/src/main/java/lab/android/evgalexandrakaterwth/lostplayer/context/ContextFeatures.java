@@ -67,7 +67,7 @@ public class ContextFeatures extends AbstractJSONHandler {
      * @throws JSONException
      */
     @Override
-    protected JSONObject prepareHeader() throws JSONException {
+    protected JSONObject prepareHeader() throws JSONException,NullPointerException {
         if (this.weather == null) {
             this.weather = new Weather();//we create an empty object
             //in that case it produces a data filled with question marks
@@ -106,7 +106,7 @@ public class ContextFeatures extends AbstractJSONHandler {
      * @throws JSONException
      */
     @Override
-    protected JSONArray prepareData() throws JSONException {
+    protected JSONArray prepareData() throws JSONException,NullPointerException {
         JSONArray values = concatArray(
                 getJSONDataList(accelerationFeatures[0], AbstractJSONHandler.DATA_PROPERTY, AbstractJSONHandler.VALUES_PROPERTY),
                 getJSONDataList(accelerationFeatures[1], AbstractJSONHandler.DATA_PROPERTY, AbstractJSONHandler.VALUES_PROPERTY),
