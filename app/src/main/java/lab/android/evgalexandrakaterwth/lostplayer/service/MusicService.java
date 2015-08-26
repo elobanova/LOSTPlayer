@@ -1,5 +1,6 @@
 package lab.android.evgalexandrakaterwth.lostplayer.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Notification;
@@ -16,7 +17,9 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+
 import org.json.JSONObject;
+
 import lab.android.evgalexandrakaterwth.lostplayer.LOSTPlayerActivity;
 import lab.android.evgalexandrakaterwth.lostplayer.R;
 import lab.android.evgalexandrakaterwth.lostplayer.context.FunfContextClient;
@@ -35,6 +38,9 @@ public class MusicService extends Service implements
 
     private static final int NOTIFY_ID = 1;
     public static final String TAG = "MUSIC SERVICE";
+    public static final String MyPREFERENCES = "MyPrefs";
+    public static final String LISTENED = "listened";
+    public static final int DEFAULT_K = 10;
 
     private MediaPlayer player;
     private List<SongItem> listOfSongs;
@@ -42,11 +48,13 @@ public class MusicService extends Service implements
     private String title = "";
     private final IBinder musicBinder = new MusicBinder();
     private MusicController controller;
+    private static SharedPreferences sharedpreferences;
 
     public void onCreate() {
         super.onCreate();
         this.position = 0;
         this.player = new MediaPlayer();
+        sharedpreferences = getApplicationContext().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         initMusicPlayer();
     }
 
@@ -95,8 +103,8 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-        SharedPreferences pref = getApplicationContext().getSharedPreferences(LOSTPlayerActivity.MY_PREFERENCES, Context.MODE_PRIVATE);
-        int recommendOpt = pref.getInt(LOSTPlayerActivity.IS_CHECKED_KEY, LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT);
+        storePlayed();
+        int recommendOpt = sharedpreferences.getInt(LOSTPlayerActivity.IS_CHECKED_KEY, LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT);
         if (recommendOpt != LOSTPlayerActivity.NO_RECOMMEND_ON_CONTEXT) {
             playRecommended(recommendOpt);
         } else {
@@ -108,6 +116,18 @@ public class MusicService extends Service implements
         //anyways send learning data
 
         sendLearningData(true, recommendOpt);
+    }
+
+    public void storePlayed() {
+        for (int i = DEFAULT_K; i > 0; i--) {
+            String songToShift = sharedpreferences.getString(LISTENED + (i - 1), "");
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.putString(LISTENED + i, songToShift);
+            editor.commit();
+        }
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putString(LISTENED + 0, this.title);
+        editor.commit();
     }
 
     public void sendLearningData(boolean isPositive, int recommendOpt) {
@@ -137,7 +157,34 @@ public class MusicService extends Service implements
                     public void onResponse(List<SongItem> songItemList) {
                         Log.i(TAG, "Success");
                         if (songItemList != null && songItemList.size() > 0) {
-                            SongItem firstClosestSong = songItemList.get(0);
+                            List<String> listenedSongs = new ArrayList<>();
+                            for (int i = 0; i < DEFAULT_K; i++) {
+                                String songFromListened = sharedpreferences.getString(LISTENED + i, "");
+                                listenedSongs.add(songFromListened);
+                            }
+
+                            SongItem firstClosestSong = null;
+                            for (SongItem item : songItemList) {
+                                if (!listenedSongs.contains(item.getTitle())) {
+                                    firstClosestSong = item;
+                                    break;
+                                }
+                            }
+                            if (firstClosestSong == null) {
+                                String longAgoListenedSongTitle = listenedSongs.get(DEFAULT_K - 1);
+                                for (SongItem item : songItemList) {
+                                    if (item.getTitle().equalsIgnoreCase(longAgoListenedSongTitle)) {
+                                        firstClosestSong = item;
+                                    } else {
+                                        for (SongItem fromAll : listOfSongs) {
+                                            if (fromAll.getTitle().equalsIgnoreCase(longAgoListenedSongTitle)) {
+                                                firstClosestSong = fromAll;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             setSong((int) firstClosestSong.getID());
                             playSong();
                         }

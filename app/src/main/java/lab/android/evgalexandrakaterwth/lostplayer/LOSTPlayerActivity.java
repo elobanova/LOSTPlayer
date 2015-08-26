@@ -324,6 +324,7 @@ public class LOSTPlayerActivity extends Activity implements MediaController.Medi
             this.isPlaybackPaused = false;
         }
         //learn anyways, false because skipped
+        this.service.storePlayed();
         this.service.sendLearningData(false,recommendOpt);
         this.controller.show(0);
     }
